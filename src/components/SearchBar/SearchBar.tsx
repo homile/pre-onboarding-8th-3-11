@@ -31,11 +31,17 @@ const SearchBar = () => {
   // up, down에 따른 요소 추천 검색어 포커싱
   const handleKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (data) {
-      if (event.code === 'ArrowUp' && select >= 1) {
+      const keyCode = event.code;
+
+      if (keyCode === 'ArrowUp' && select >= 1) {
         setSelect(select - 1);
       }
-      if (event.code === 'ArrowDown' && select < data.length - 1) {
+      if (keyCode === 'ArrowDown' && select < data.length - 1) {
         setSelect(select + 1);
+      }
+
+      if (keyCode === 'Enter') {
+        setSearch(data[select].sickNm);
       }
     }
   };
@@ -71,6 +77,7 @@ const SearchBar = () => {
     <div onKeyUp={event => handleKeyUp(event)} className="flex flex-col w-full ">
       <input
         className="p-5 m-10 mb-0 w-300px h-16 text-12 border-2 rounded-5"
+        value={search}
         onChange={e => setSearch(e.target.value)}
       />
       <ul className="mx-10 border-x-2 border-b-2 rounded-5">
@@ -79,7 +86,7 @@ const SearchBar = () => {
             return (
               <li
                 key={sick.sickCd}
-                className={`${idx === select ? 'text-red-400' : ''} p-5 w-300px`}
+                className={`${idx === select ? 'bg-sky-400 text-white' : ''} p-5 w-300px`}
               >
                 {sick.sickNm}
               </li>
