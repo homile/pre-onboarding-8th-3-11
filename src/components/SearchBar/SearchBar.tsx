@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useRecoilState } from 'recoil';
 import { getData } from '../../apis/apis';
+import { searchState } from '../../store/store';
 
 interface dataType {
   sickCd: string;
@@ -11,10 +13,18 @@ const SearchBar = () => {
   const [data, setData] = useState<dataType[] | null>(null);
   const [select, setSelect] = useState(-1);
 
+  const [searchResult, setSearchResult] = useRecoilState(searchState);
+
   // 데이터 가져오기
   const dataGet = () => {
     getData(search).then(res => {
-      setData(res.data);
+      if (res.data.legnth === 0) {
+        setData(null);
+      }
+      if (res.data.length !== 0) {
+        setData(res.data);
+        setSearchResult({ ...searchResult, [search]: res.data });
+      }
     });
   };
 
@@ -34,7 +44,17 @@ const SearchBar = () => {
     // 디바운스 처리 1초
     const debounce = setTimeout(() => {
       if (search) {
-        return dataGet();
+        const resultState = searchResult[search as keyof dataType];
+        // 전역상태에 캐싱처리 (이렇게 하는게 맞는진 모르겠음)
+        if (resultState) {
+          setData(resultState);
+          return;
+        }
+
+        if (resultState === undefined) {
+          console.info('calling api');
+          return dataGet();
+        }
       }
       if (search === '') {
         setData(null);
@@ -48,22 +68,25 @@ const SearchBar = () => {
   }, [data]);
 
   return (
-    <div onKeyUp={event => handleKeyUp(event)}>
+    <div onKeyUp={event => handleKeyUp(event)} className="flex flex-col w-full ">
       <input
-        className="p-5 m-10 w-300px h-16 text-12 border-2 rounded-5"
+        className="p-5 m-10 mb-0 w-300px h-16 text-12 border-2 rounded-5"
         onChange={e => setSearch(e.target.value)}
       />
-      <ul>
+      <ul className="mx-10 border-x-2 border-b-2 rounded-5">
         {data ? (
           data.map((sick, idx) => {
             return (
-              <li key={sick.sickCd} className={`${idx === select ? 'text-red-400' : ''}`}>
+              <li
+                key={sick.sickCd}
+                className={`${idx === select ? 'text-red-400' : ''} p-5 w-300px`}
+              >
                 {sick.sickNm}
               </li>
             );
           })
         ) : (
-          <li>검색어 없음</li>
+          <li className="p-5 w-300px">검색어 없음</li>
         )}
       </ul>
     </div>
